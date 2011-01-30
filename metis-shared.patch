@@ -1,0 +1,178 @@
+--- metis-4.0/Lib/Makefile.orig	1998-09-22 14:08:29.000000000 +0200
++++ metis-4.0/Lib/Makefile	2011-01-29 21:13:57.956694742 +0100
+@@ -4,6 +4,7 @@
+ 
+ CFLAGS = $(COPTIONS) $(OPTFLAGS) $(INCLUDES)
+ LD = $(CC) -L. 
++libdir = /usr/lib
+ 
+ 
+ OBJS = coarsen.o fm.o initpart.o match.o ccgraph.o memory.o \
+@@ -17,12 +18,17 @@
+        mrefine2.o minitpart2.o mbalance2.o mfm2.o \
+        kvmetis.o kwayvolrefine.o kwayvolfm.o subdomains.o
+ 
+-.c.o:
+-	$(CC) $(CFLAGS) -c $*.c
++LTOBJS=$(patsubst %.o,%.lo,$(OBJS))
+ 
+-../libmetis.a: $(OBJS)
+-	$(AR) $@ $(OBJS)
+-	$(RANLIB) $@
++%.lo: %.c
++	libtool --mode=compile --tag=CC $(CC) $(CFLAGS) -c $*.c
++
++libmetis.la: $(LTOBJS)
++	libtool --mode=link --tag=CC $(CC) $(COPTIONS) $(OPTFLAGS) $(LDOPTIONS) -o $@ $(LTOBJS) -rpath $(libdir) -lm
++
++install:
++	install -d $(DESTDIR)$(libdir)
++	libtool --mode=install install libmetis.la $(DESTDIR)$(libdir)
+ 
+ clean:
+ 	rm -f *.o
+--- metis-4.0/Programs/Makefile.orig	1998-09-22 14:06:47.000000000 +0200
++++ metis-4.0/Programs/Makefile	2011-01-30 07:32:34.928692227 +0100
+@@ -5,11 +5,11 @@
+ INCLUDES = -I../Lib 
+ CFLAGS = $(COPTIONS) $(OPTFLAGS) $(INCLUDES)
+ 
+-LIBS = -lmetis -lm
+-LD = $(CC) $(LDOPTIONS) -L. -L..
+-METISLIB = ../libmetis.a
+-
++LIBS = ../Lib/libmetis.la -lm
++LD = $(CC) $(LDOPTIONS)
++METISLIB = ../Lib/libmetis.la
+ 
++bindir = /usr/bin
+ 
+ PMETISOBJS = pmetis.o io.o 
+ KMETISOBJS = kmetis.o io.o 
+@@ -25,47 +25,43 @@
+ .c.o:
+ 	$(CC) $(CFLAGS) -c $*.c
+ 
+-default: $(BINDIR)/pmetis$(VERNUM) $(BINDIR)/kmetis$(VERNUM) \
+-         $(BINDIR)/oemetis$(VERNUM) $(BINDIR)/onmetis$(VERNUM) $(BINDIR)/mesh2dual$(VERNUM) \
+-         $(BINDIR)/mesh2nodal$(VERNUM) $(BINDIR)/partdmesh$(VERNUM) $(BINDIR)/partnmesh$(VERNUM) \
+-         $(BINDIR)/graphchk$(VERNUM)
+-
+-$(BINDIR)/pmetis$(VERNUM): $(PMETISOBJS) $(METISLIB)
+-	$(LD)  -o $@ $(PMETISOBJS) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/kmetis$(VERNUM): $(KMETISOBJS) $(METISLIB)
+-	$(LD)  -o $@ $(KMETISOBJS) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/oemetis$(VERNUM): $(OEMETISOBJS) $(METISLIB)
+-	$(LD)  -o $@ $(OEMETISOBJS) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/onmetis$(VERNUM): $(ONMETISOBJS) $(METISLIB)
+-	$(LD)  -o $@ $(ONMETISOBJS) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/mesh2dual$(VERNUM): $(MESH2DUALOBJ) $(METISLIB)
+-	$(LD)  -o $@ $(MESH2DUALOBJ) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/mesh2nodal$(VERNUM): $(MESH2NODALOBJ) $(METISLIB)
+-	$(LD)  -o $@ $(MESH2NODALOBJ) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/partdmesh$(VERNUM): $(PARTDMESHOBJ) $(METISLIB)
+-	$(LD)  -o $@ $(PARTDMESHOBJ) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/partnmesh$(VERNUM): $(PARTNMESHOBJ) $(METISLIB)
+-	$(LD)  -o $@ $(PARTNMESHOBJ) $(LIBS)
+-	chmod 755 $@
+-
+-$(BINDIR)/graphchk$(VERNUM): $(GRAPHCHKOBJ) $(METISLIB)
+-	$(LD)  -o $@ $(GRAPHCHKOBJ) $(LIBS)
+-	chmod 755 $@
++PROGRAMS = pmetis$(VERNUM) kmetis$(VERNUM) \
++         oemetis$(VERNUM) onmetis$(VERNUM) mesh2dual$(VERNUM) \
++         mesh2nodal$(VERNUM) partdmesh$(VERNUM) partnmesh$(VERNUM) \
++         graphchk$(VERNUM)
++
++default: $(PROGRAMS)
++
++pmetis$(VERNUM): $(PMETISOBJS) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(PMETISOBJS) $(LIBS)
++
++kmetis$(VERNUM): $(KMETISOBJS) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(KMETISOBJS) $(LIBS)
++
++oemetis$(VERNUM): $(OEMETISOBJS) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(OEMETISOBJS) $(LIBS)
++
++onmetis$(VERNUM): $(ONMETISOBJS) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(ONMETISOBJS) $(LIBS)
++
++mesh2dual$(VERNUM): $(MESH2DUALOBJ) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(MESH2DUALOBJ) $(LIBS)
++
++mesh2nodal$(VERNUM): $(MESH2NODALOBJ) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(MESH2NODALOBJ) $(LIBS)
++
++partdmesh$(VERNUM): $(PARTDMESHOBJ) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(PARTDMESHOBJ) $(LIBS)
++
++partnmesh$(VERNUM): $(PARTNMESHOBJ) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(PARTNMESHOBJ) $(LIBS)
++
++graphchk$(VERNUM): $(GRAPHCHKOBJ) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(GRAPHCHKOBJ) $(LIBS)
+ 
++install: $(PROGRAMS)
++	install -d $(DESTDIR)$(bindir)
++	for f in $(PROGRAMS) ; do libtool --mode=install --tag=CC install $$f $(DESTDIR)$(bindir) ; done
+ 
+ clean:
+ 	rm -f *.o
+--- metis-4.0/Test/Makefile.orig	1998-09-22 14:07:00.000000000 +0200
++++ metis-4.0/Test/Makefile	2011-01-30 07:38:39.156688875 +0100
+@@ -5,9 +5,9 @@
+ INCLUDES = -I../Lib 
+ CFLAGS = $(COPTIONS) $(OPTFLAGS) $(INCLUDES)
+ 
+-LIBS = -lmetis -lm
+-LD = $(CC) $(LDOPTIONS) -L. -L..
+-METISLIB = ../libmetis.a
++LIBS = ../Lib/libmetis.la -lm
++LD = $(CC) $(LDOPTIONS)
++METISLIB = ../Lib/libmetis.la
+ 
+ 
+ 
+@@ -17,11 +17,10 @@
+ .c.o:
+ 	$(CC) $(CFLAGS) -c $*.c
+ 
+-default: $(BINDIR)/mtest
++default: mtest
+ 
+-$(BINDIR)/mtest: $(MTESTOBJS) $(METISLIB)
+-	$(LD)  -o $@ $(MTESTOBJS) $(LIBS)
+-	chmod 755 $@
++mtest: $(MTESTOBJS) $(METISLIB)
++	libtool --mode=link --tag=CC $(LD) -o $@ $(MTESTOBJS) $(LIBS)
+ 
+ clean:
+ 	rm -f *.o
+--- metis-4.0/Makefile.orig	1998-09-20 20:15:31.000000000 +0200
++++ metis-4.0/Makefile	2011-01-30 07:39:26.624686361 +0100
+@@ -5,6 +5,10 @@
+ 	(cd Programs ; make ) 
+ 	(cd Test ; make ) 
+ 
++install:
++	(cd Lib ; make install )
++	(cd Programs ; make install )
++
+ clean:
+ 	(cd Lib ; make clean )
+ 	(cd Programs ; make clean )
