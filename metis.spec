@@ -1,20 +1,17 @@
 Summary:	METIS - Serial Graph Partitioning and Fill-reducing Matrix Ordering
 Summary(pl.UTF-8):	METIS - szeregowy podział grafu i tworzenie porządków redukujący macierzy
 Name:		metis
-# see VERSION file for real version number
-Version:	4.0.1
-%define	fver	4.0
+Version:	5.0.2
 Release:	1
 License:	free, distribution restricted (http://glaros.dtc.umn.edu/gkhome/metis/metis/faq?q=metis/metis/faq#distribute)
 Group:		Libraries
 #Source0Download: http://glaros.dtc.umn.edu/gkhome/metis/metis/download
-Source0:	http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/%{name}-%{fver}.tar.gz
-# NoSource0-md5:	0aa546419ff7ef50bd86ce1ec7f727c7
+Source0:	http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/%{name}-%{version}.tar.gz
+# NoSource0-md5:	acb521a4e8c2e6dd559a7f9abd0468c5
 NoSource:	0
-Patch0:		%{name}-shared.patch
-Patch1:		%{name}-libc.patch
+Patch0:		%{name}-cmake.patch
 URL:		http://glaros.dtc.umn.edu/gkhome/views/metis
-BuildRequires:	libtool
+BuildRequires:	cmake >= 2.8
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -59,26 +56,27 @@ Static METIS library.
 Statyczna biblioteka METIS.
 
 %prep
-%setup -q -n %{name}-%{fver}
+%setup -q
 %patch0 -p1
-%patch1 -p1
 
 %build
-%{__make} \
-	CC="%{__cc}" \
-	OPTFLAGS="%{rpmcflags} %{rpmcppflags}" \
-	LDOPTIONS="%{rpmldflags}" \
-	libdir=%{_libdir}
+mkdir -p build-shared build-static
+cd build-static
+%cmake ..
+%{__make}
+cd ../build-shared
+%cmake .. \
+	-DSHARED=ON
+%{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
-	DESTDIR=$RPM_BUILD_ROOT \
-	libdir=%{_libdir}
+%{__make} -C build-static install \
+	DESTDIR=$RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT%{_includedir}/metis
-install Lib/*.h $RPM_BUILD_ROOT%{_includedir}/metis
+%{__make} -C build-shared install \
+	DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -88,25 +86,21 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc CHANGES VERSION
+%doc Changelog LICENSE.txt
+%attr(755,root,root) %{_bindir}/cmpfillin
+%attr(755,root,root) %{_bindir}/gpmetis
 %attr(755,root,root) %{_bindir}/graphchk
-%attr(755,root,root) %{_bindir}/kmetis
-%attr(755,root,root) %{_bindir}/mesh2dual
-%attr(755,root,root) %{_bindir}/mesh2nodal
-%attr(755,root,root) %{_bindir}/oemetis
-%attr(755,root,root) %{_bindir}/onmetis
-%attr(755,root,root) %{_bindir}/partdmesh
-%attr(755,root,root) %{_bindir}/partnmesh
-%attr(755,root,root) %{_bindir}/pmetis
+%attr(755,root,root) %{_bindir}/m2gmetis
+%attr(755,root,root) %{_bindir}/mpmetis
+%attr(755,root,root) %{_bindir}/ndmetis
 %attr(755,root,root) %{_libdir}/libmetis.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libmetis.so.0
 
 %files devel
 %defattr(644,root,root,755)
-%doc Doc/manual.ps
+%doc manual/manual.pdf
 %attr(755,root,root) %{_libdir}/libmetis.so
-%{_libdir}/libmetis.la
-%{_includedir}/metis
+%{_includedir}/metis.h
 
 %files static
 %defattr(644,root,root,755)

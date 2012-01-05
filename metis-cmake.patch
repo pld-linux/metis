@@ -1,0 +1,27 @@
+--- metis-5.0.2/GKlib/GKlibSystem.cmake.orig	2011-09-01 00:23:04.000000000 +0200
++++ metis-5.0.2/GKlib/GKlibSystem.cmake	2012-01-02 18:03:47.012961126 +0100
+@@ -109,7 +109,7 @@
+   if("${HAVE_THREADLOCALSTORAGE}" MATCHES "^${HAVE_THREADLOCALSTORAGE}$")
+     try_compile(HAVE_THREADLOCALSTORAGE
+       ${CMAKE_BINARY_DIR}
+-      ${GKLIB_PATH}/conf/check_thread_storage.c)
++      ${CMAKE_SOURCE_DIR}/${GKLIB_PATH}/conf/check_thread_storage.c)
+     if(HAVE_THREADLOCALSTORAGE)
+       message(STATUS "checking for thread-local storage - found")
+     else()
+--- metis-5.0.2/libmetis/CMakeLists.txt.orig	2011-06-22 19:47:13.000000000 +0200
++++ metis-5.0.2/libmetis/CMakeLists.txt	2012-01-05 19:16:23.618452636 +0100
+@@ -8,9 +8,10 @@
+   target_link_libraries(metis m)
+ endif()
+ 
++set_target_properties(metis PROPERTIES SOVERSION 0 VERSION 0.0.0)
+ if(METIS_INSTALL)
+   install(TARGETS metis
+-    LIBRARY DESTINATION lib
+-    RUNTIME DESTINATION lib
+-    ARCHIVE DESTINATION lib)
++    LIBRARY DESTINATION lib${LIB_SUFFIX}
++    RUNTIME DESTINATION lib${LIB_SUFFIX}
++    ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ endif()
