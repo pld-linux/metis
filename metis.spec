@@ -2,7 +2,7 @@ Summary:	METIS - Serial Graph Partitioning and Fill-reducing Matrix Ordering
 Summary(pl.UTF-8):	METIS - szeregowy podział grafu i tworzenie porządków redukujący macierzy
 Name:		metis
 Version:	5.1.0
-Release:	1
+Release:	2
 License:	Apache v2.0
 Group:		Libraries
 #Source0Download: http://glaros.dtc.umn.edu/gkhome/metis/metis/download
