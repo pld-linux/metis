@@ -56,7 +56,7 @@ Statyczna biblioteka METIS.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
 
 %build
 mkdir -p build-shared build-static
